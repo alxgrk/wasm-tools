@@ -526,25 +526,25 @@ pub enum Instruction<'a> {
     // GC types instructions.
     StructNew(u32),
     StructNewDefault(u32),
-    StructGet(u32, u32),
-    StructGetS(u32, u32),
-    StructGetU(u32, u32),
-    StructSet(u32, u32),
+    StructGet { type_index: u32, field_index: u32 },
+    StructGetS { type_index: u32, field_index: u32 },
+    StructGetU { type_index: u32, field_index: u32 },
+    StructSet { type_index: u32, field_index: u32 },
 
     ArrayNew(u32),
     ArrayNewDefault(u32),
-    ArrayNewFixed(u32, u32),
-    ArrayNewData(u32, u32),
-    ArrayNewElem(u32, u32),
+    ArrayNewFixed { type_index: u32, size: u32 },
+    ArrayNewData { type_index: u32, data_index: u32 },
+    ArrayNewElem { type_index: u32, elem_index: u32 },
     ArrayGet(u32),
     ArrayGetS(u32),
     ArrayGetU(u32),
     ArraySet(u32),
     ArrayLen,
     ArrayFill(u32),
-    ArrayCopy(u32, u32),
-    ArrayInitData(u32, u32),
-    ArrayInitElem(u32, u32),
+    ArrayCopy { src_type_index: u32, dst_type_index: u32 },
+    ArrayInitData { type_index: u32, data_index: u32 },
+    ArrayInitElem { type_index: u32, elem_index: u32 },
 
     RefTestNonNull(HeapType),
     RefTestNullable(HeapType),
@@ -1362,25 +1362,25 @@ impl Encode for Instruction<'_> {
                 sink.push(0x01);
                 type_index.encode(sink);
             }
-            Instruction::StructGet(type_index, field_index) => {
+            Instruction::StructGet { type_index, field_index } => {
                 sink.push(0xfb);
                 sink.push(0x02);
                 type_index.encode(sink);
                 field_index.encode(sink);
             }
-            Instruction::StructGetS(type_index, field_index) => {
+            Instruction::StructGetS { type_index, field_index } => {
                 sink.push(0xfb);
                 sink.push(0x03);
                 type_index.encode(sink);
                 field_index.encode(sink);
             }
-            Instruction::StructGetU(type_index, field_index) => {
+            Instruction::StructGetU { type_index, field_index } => {
                 sink.push(0xfb);
                 sink.push(0x04);
                 type_index.encode(sink);
                 field_index.encode(sink);
             }
-            Instruction::StructSet(type_index, field_index) => {
+            Instruction::StructSet { type_index, field_index } => {
                 sink.push(0xfb);
                 sink.push(0x05);
                 type_index.encode(sink);
@@ -1396,19 +1396,19 @@ impl Encode for Instruction<'_> {
                 sink.push(0x07);
                 type_index.encode(sink);
             }
-            Instruction::ArrayNewFixed(type_index, size) => {
+            Instruction::ArrayNewFixed { type_index, size } => {
                 sink.push(0xfb);
                 sink.push(0x08);
                 type_index.encode(sink);
                 size.encode(sink);
             }
-            Instruction::ArrayNewData(type_index, data_index) => {
+            Instruction::ArrayNewData { type_index, data_index } => {
                 sink.push(0xfb);
                 sink.push(0x09);
                 type_index.encode(sink);
                 data_index.encode(sink);
             }
-            Instruction::ArrayNewElem(type_index, elem_index) => {
+            Instruction::ArrayNewElem { type_index, elem_index } => {
                 sink.push(0xfb);
                 sink.push(0x0a);
                 type_index.encode(sink);
@@ -1443,19 +1443,19 @@ impl Encode for Instruction<'_> {
                 sink.push(0x10);
                 type_index.encode(sink);
             }
-            Instruction::ArrayCopy(dst_type_index, src_type_index) => {
+            Instruction::ArrayCopy { dst_type_index, src_type_index } => {
                 sink.push(0xfb);
                 sink.push(0x11);
                 dst_type_index.encode(sink);
                 src_type_index.encode(sink);
             }
-            Instruction::ArrayInitData(type_index, data_index) => {
+            Instruction::ArrayInitData { type_index, data_index } => {
                 sink.push(0xfb);
                 sink.push(0x12);
                 type_index.encode(sink);
                 data_index.encode(sink);
             }
-            Instruction::ArrayInitElem(type_index, elem_index) => {
+            Instruction::ArrayInitElem { type_index, elem_index } => {
                 sink.push(0xfb);
                 sink.push(0x13);
                 type_index.encode(sink);

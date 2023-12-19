@@ -316,8 +316,27 @@ macro_rules! for_each_operator {
             // 0xFB prefixed operators
             // Garbage Collection
             // http://github.com/WebAssembly/gc
+            @gc RefEq => visit_ref_eq
+            @gc StructNew { type_index: u32 } => visit_struct_new
             @gc StructNewDefault { type_index: u32 } => visit_struct_new_default
+            @gc StructGet { type_index: u32, field_index: u32 } => visit_struct_get
+            @gc StructGetS { type_index: u32, field_index: u32 } => visit_struct_get_s
+            @gc StructGetU { type_index: u32, field_index: u32 } => visit_struct_get_u
+            @gc StructSet { type_index: u32, field_index: u32 } => visit_struct_set
+            @gc ArrayNew { type_index: u32 } => visit_array_new
             @gc ArrayNewDefault { type_index: u32 } => visit_array_new_default
+            @gc ArrayNewFixed { type_index: u32, size: u32 } => visit_array_new_fixed
+            @gc ArrayNewData { type_index: u32, data_index: u32 } => visit_array_new_data
+            @gc ArrayNewElem { type_index: u32, elem_index: u32 } => visit_array_new_elem
+            @gc ArrayGet { type_index: u32 } => visit_array_get
+            @gc ArrayGetS { type_index: u32 } => visit_array_get_s
+            @gc ArrayGetU { type_index: u32 } => visit_array_get_u
+            @gc ArraySet { type_index: u32 } => visit_array_set
+            @gc ArrayLen => visit_array_len
+            @gc ArrayFill { type_index: u32 } => visit_array_fill
+            @gc ArrayCopy { src_type_index: u32, dst_type_index: u32 } => visit_array_copy
+            @gc ArrayInitData { type_index: u32, data_index: u32 } => visit_array_init_data
+            @gc ArrayInitElem { type_index: u32, elem_index: u32 } => visit_array_init_elem
             @gc RefTestNonNull { hty: $crate::HeapType } => visit_ref_test_non_null
             @gc RefTestNullable { hty: $crate::HeapType } => visit_ref_test_nullable
             @gc RefCastNonNull { hty: $crate::HeapType } => visit_ref_cast_non_null

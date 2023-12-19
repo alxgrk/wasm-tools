@@ -154,7 +154,7 @@ fn skip_validation(test: &Path) -> bool {
         "proposals/gc/br_on_cast_fail.wast",
         "proposals/gc/extern.wast",
         "proposals/gc/ref_eq.wast",
-        "proposals/gc/struct.wast",
+        //"proposals/gc/struct.wast",
         "exnref/exnref.wast",
         "exnref/throw_ref.wast",
         "exnref/try_table.wast",
@@ -699,6 +699,10 @@ fn error_matches(error: &str, message: &str) -> bool {
 
     if message == "duplicate identifier" {
         return error.contains("duplicate") && error.contains("identifier");
+    }
+
+    if message == "duplicate field" {
+        return error.contains("duplicate") && error.contains("identifier") && error.contains("field");
     }
 
     if message == "unknown memory" {

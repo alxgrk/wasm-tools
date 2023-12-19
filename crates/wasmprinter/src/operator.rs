@@ -231,6 +231,16 @@ impl<'a, 'b> PrintOperator<'a, 'b> {
         self.printer.print_idx(&self.state.core.element_names, idx)
     }
 
+    fn field_index(&mut self, idx: u32) -> Result<()> {
+        self.printer
+            .print_field_idx(self.state, self.state.core.types.len() as u32, idx)
+    }
+
+    fn size(&mut self, size: u32) -> Result<()> {
+        write!(self.result(), "{size}")?;
+        Ok(())
+    }
+
     fn lane(&mut self, lane: u8) -> Result<()> {
         write!(self.result(), "{lane}")?;
         Ok(())
@@ -424,11 +434,101 @@ macro_rules! define_visit {
             )?;
         }
     );
+    (payload $self:ident StructNew $type_index: ident) => (
+        $self.type_index_no_type($type_index)?;
+    );
     (payload $self:ident StructNewDefault $type_index: ident) => (
+        $self.type_index_no_type($type_index)?;
+    );
+    (payload $self:ident StructGet $type_index: ident $($arg:ident)*) => (
+        $self.type_index_no_type($type_index)?;
+        $(
+            $self.push_str(" ");
+            $self.$arg($arg)?;
+        )*
+    );
+    (payload $self:ident StructGetS $type_index: ident $($arg:ident)*) => (
+        $self.type_index_no_type($type_index)?;
+        $(
+            $self.push_str(" ");
+            $self.$arg($arg)?;
+        )*
+    );
+    (payload $self:ident StructGetU $type_index: ident $($arg:ident)*) => (
+        $self.type_index_no_type($type_index)?;
+        $(
+            $self.push_str(" ");
+            $self.$arg($arg)?;
+        )*
+    );
+    (payload $self:ident StructSet $type_index: ident $($arg:ident)*) => (
+        $self.type_index_no_type($type_index)?;
+        $(
+            $self.push_str(" ");
+            $self.$arg($arg)?;
+        )*
+    );
+    (payload $self:ident ArrayNew $type_index: ident) => (
         $self.type_index_no_type($type_index)?;
     );
     (payload $self:ident ArrayNewDefault $type_index: ident) => (
         $self.type_index_no_type($type_index)?;
+    );
+    (payload $self:ident ArrayNewFixed $type_index: ident $($arg:ident)*) => (
+        $self.type_index_no_type($type_index)?;
+        $(
+            $self.push_str(" ");
+            $self.$arg($arg)?;
+        )*
+    );
+    (payload $self:ident ArrayNewData $type_index: ident $($arg:ident)*) => (
+        $self.type_index_no_type($type_index)?;
+        $(
+            $self.push_str(" ");
+            $self.$arg($arg)?;
+        )*
+    );
+    (payload $self:ident ArrayNewElem $type_index: ident $($arg:ident)*) => (
+        $self.type_index_no_type($type_index)?;
+        $(
+            $self.push_str(" ");
+            $self.$arg($arg)?;
+        )*
+    );
+    (payload $self:ident ArrayGet $type_index: ident) => (
+        $self.type_index_no_type($type_index)?;
+    );
+    (payload $self:ident ArrayGetS $type_index: ident) => (
+        $self.type_index_no_type($type_index)?;
+    );
+    (payload $self:ident ArrayGetU $type_index: ident) => (
+        $self.type_index_no_type($type_index)?;
+    );
+    (payload $self:ident ArraySet $type_index: ident) => (
+        $self.type_index_no_type($type_index)?;
+    );
+    (payload $self:ident ArrayFill $type_index: ident) => (
+        $self.type_index_no_type($type_index)?;
+    );
+    (payload $self:ident ArrayCopy $dst:ident $src:ident) => (
+        if $src != 0 || $dst != 0 {
+            $self.type_index_no_type($dst)?;
+            $self.type_index_no_type($src)?;
+        }
+    );
+    (payload $self:ident ArrayInitData $type_index: ident $($arg:ident)*) => (
+        $self.type_index_no_type($type_index)?;
+        $(
+            $self.push_str(" ");
+            $self.$arg($arg)?;
+        )*
+    );
+    (payload $self:ident ArrayInitElem $type_index: ident $($arg:ident)*) => (
+        $self.type_index_no_type($type_index)?;
+        $(
+            $self.push_str(" ");
+            $self.$arg($arg)?;
+        )*
     );
     (payload $self:ident RefTestNonNull $hty:ident) => (
         $self.push_str(" ");
@@ -999,8 +1099,27 @@ macro_rules! define_visit {
     (name I16x8RelaxedQ15mulrS) => ("i16x8.relaxed_q15mulr_s");
     (name I16x8RelaxedDotI8x16I7x16S) => ("i16x8.relaxed_dot_i8x16_i7x16_s");
     (name I32x4RelaxedDotI8x16I7x16AddS) => ("i32x4.relaxed_dot_i8x16_i7x16_add_s");
+    (name RefEq) => ("ref.eq");
+    (name StructNew) => ("struct.new");
     (name StructNewDefault) => ("struct.new_default");
+    (name StructGet) => ("struct.get");
+    (name StructGetS) => ("struct.get_s");
+    (name StructGetU) => ("struct.get_u");
+    (name StructSet) => ("struct.set");
+    (name ArrayNew) => ("array.new");
     (name ArrayNewDefault) => ("array.new_default");
+    (name ArrayNewFixed) => ("array.new_fixed");
+    (name ArrayNewData) => ("array.new_data");
+    (name ArrayNewElem) => ("array.new_elem");
+    (name ArrayGet) => ("array.get");
+    (name ArrayGetS) => ("array.get_s");
+    (name ArrayGetU) => ("array.get_u");
+    (name ArraySet) => ("array.set");
+    (name ArrayLen) => ("array.len");
+    (name ArrayFill) => ("array.fill");
+    (name ArrayCopy) => ("array.copy");
+    (name ArrayInitData) => ("array.init_data");
+    (name ArrayInitElem) => ("array.init_elem");
     (name AnyConvertExtern) => ("any.convert_extern");
     (name ExternConvertAny) => ("extern.convert_any");
     (name RefTestNonNull) => ("ref.test");

@@ -73,6 +73,7 @@ struct CoreState {
     global_names: HashMap<u32, Naming>,
     element_names: HashMap<u32, Naming>,
     data_names: HashMap<u32, Naming>,
+    field_names: HashMap<(u32, u32), Naming>,
     module_names: HashMap<u32, Naming>,
     instance_names: HashMap<u32, Naming>,
 }
@@ -551,6 +552,7 @@ impl Printer {
                     // labels can be shadowed, so maintaining the used names is not useful.
                     "label" => None,
                     "local" => Some(HashSet::new()),
+                    "field" => Some(HashSet::new()),
                     _ => unimplemented!("{name} is an unknown type of indirect names"),
                 };
                 for naming in indirect.names {
@@ -579,6 +581,7 @@ impl Printer {
                 Name::Global(n) => name_map(&mut state.core.global_names, n, "global")?,
                 Name::Element(n) => name_map(&mut state.core.element_names, n, "elem")?,
                 Name::Data(n) => name_map(&mut state.core.data_names, n, "data")?,
+                Name::Field(n) => indirect_name_map(&mut state.core.field_names, n, "field")?,
                 Name::Unknown { .. } => (),
             }
         }
@@ -1313,6 +1316,14 @@ impl Printer {
 
     fn print_local_idx(&mut self, state: &State, func: u32, idx: u32) -> Result<()> {
         match state.core.local_names.get(&(func, idx)) {
+            Some(name) => write!(self.result, "${}", name.identifier())?,
+            None => write!(self.result, "{}", idx)?,
+        }
+        Ok(())
+    }
+
+    fn print_field_idx(&mut self, state: &State, ty: u32, idx: u32) -> Result<()> {
+        match state.core.field_names.get(&(ty, idx)) {
             Some(name) => write!(self.result, "${}", name.identifier())?,
             None => write!(self.result, "{}", idx)?,
         }

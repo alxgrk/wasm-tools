@@ -1001,16 +1001,26 @@ impl<'a> BinaryReader<'a> {
     {
         let code = self.read_var_u32()?;
         Ok(match code {
-            0x01 => {
-                let type_index = self.read_var_u32()?;
-                visitor.visit_struct_new_default(type_index)
-            }
-
-            0x07 => {
-                let type_index = self.read_var_u32()?;
-                visitor.visit_array_new_default(type_index)
-            }
-
+            0x0 => visitor.visit_struct_new(self.read_var_u32()?),
+            0x01 => visitor.visit_struct_new_default(self.read_var_u32()?),
+            0x02 => visitor.visit_struct_get(self.read_var_u32()?, self.read_var_u32()?),
+            0x03 => visitor.visit_struct_get_s(self.read_var_u32()?, self.read_var_u32()?),
+            0x04 => visitor.visit_struct_get_u(self.read_var_u32()?, self.read_var_u32()?),
+            0x05 => visitor.visit_struct_set(self.read_var_u32()?, self.read_var_u32()?),
+            0x06 => visitor.visit_array_new(self.read_var_u32()?),
+            0x07 => visitor.visit_array_new_default(self.read_var_u32()?),
+            0x08 => visitor.visit_array_new_fixed(self.read_var_u32()?, self.read_var_u32()?),
+            0x09 => visitor.visit_array_new_data(self.read_var_u32()?, self.read_var_u32()?),
+            0x0a => visitor.visit_array_new_elem(self.read_var_u32()?, self.read_var_u32()?),
+            0x0b => visitor.visit_array_get(self.read_var_u32()?),
+            0x0c => visitor.visit_array_get_s(self.read_var_u32()?),
+            0x0d => visitor.visit_array_get_u(self.read_var_u32()?),
+            0x0e => visitor.visit_array_set(self.read_var_u32()?),
+            0x0f => visitor.visit_array_len(),
+            0x10 => visitor.visit_array_fill(self.read_var_u32()?),
+            0x11 => visitor.visit_array_copy(self.read_var_u32()?, self.read_var_u32()?),
+            0x12 => visitor.visit_array_init_data(self.read_var_u32()?, self.read_var_u32()?),
+            0x13 => visitor.visit_array_init_elem(self.read_var_u32()?, self.read_var_u32()?),
             0x14 => visitor.visit_ref_test_non_null(self.read()?),
             0x15 => visitor.visit_ref_test_nullable(self.read()?),
             0x16 => visitor.visit_ref_cast_non_null(self.read()?),
@@ -1018,7 +1028,6 @@ impl<'a> BinaryReader<'a> {
 
             0x1a => visitor.visit_any_convert_extern(),
             0x1b => visitor.visit_extern_convert_any(),
-
             0x1c => visitor.visit_ref_i31(),
             0x1d => visitor.visit_i31_get_s(),
             0x1e => visitor.visit_i31_get_u(),

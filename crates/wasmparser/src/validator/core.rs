@@ -455,6 +455,26 @@ impl ModuleState {
 
             // These are valid const expressions with the gc proposal is
             // enabled.
+            (@visit $self:ident visit_struct_new $idx:ident) => {{
+                $self.validate_gc("struct.new")?;
+                $self.validator().visit_struct_new($idx)
+            }};
+            (@visit $self:ident visit_struct_new_default $idx:ident) => {{
+                $self.validate_gc("struct.new_default")?;
+                $self.validator().visit_struct_new_default($idx)
+            }};
+            (@visit $self:ident visit_array_new $idx:ident) => {{
+                $self.validate_gc("array.new")?;
+                $self.validator().visit_array_new($idx)
+            }};
+            (@visit $self:ident visit_array_new_default $idx:ident) => {{
+                $self.validate_gc("array.new_default")?;
+                $self.validator().visit_array_new_default($idx)
+            }};
+            (@visit $self:ident visit_array_new_fixed $idx:ident) => {{
+                $self.validate_gc("array.new_fixed")?;
+                $self.validator().visit_array_new_fixed($idx)
+            }};
             (@visit $self:ident visit_ref_i31) => {{
                 $self.validate_gc("ref.i31")?;
                 $self.validator().visit_ref_i31()

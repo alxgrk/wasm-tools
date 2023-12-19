@@ -675,6 +675,14 @@ pub struct StructType {
     pub fields: Box<[FieldType]>,
 }
 
+impl StructType {
+
+    /// Get the field at the specified index.
+    pub fn field_at(&self, at: u32) -> Option<FieldType> {
+        self.fields.get(usize::try_from(at).unwrap()).copied()
+    }
+}
+
 /// Represents the types of values in a WebAssembly module.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum ValType {
@@ -990,7 +998,7 @@ impl RefType {
     /// Create a new `RefType`.
     ///
     /// Returns `None` when the heap type's type index (if any) is
-    /// beyond this crate's implementation limits and therfore is not
+    /// beyond this crate's implementation limits and therefore is not
     /// representable.
     pub fn new(nullable: bool, heap_type: HeapType) -> Option<Self> {
         let nullable32 = Self::NULLABLE_BIT * (nullable as u32);

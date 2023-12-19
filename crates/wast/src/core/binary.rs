@@ -817,6 +817,7 @@ struct Names<'a> {
     data_idx: u32,
     elems: Vec<(u32, &'a str)>,
     elem_idx: u32,
+    fields: Vec<(u32, Vec<(u32, &'a str)>)>,
 }
 
 fn find_names<'a>(
@@ -969,6 +970,7 @@ impl Names<'_> {
             && self.types.is_empty()
             && self.data.is_empty()
             && self.elems.is_empty()
+            && self.fields.is_empty()
         // NB: specifically don't check tags/modules/instances since they're
         // not encoded for now.
     }
@@ -1023,6 +1025,10 @@ impl Encode for Names<'_> {
         if self.data.len() > 0 {
             self.data.encode(&mut tmp);
             subsec(9, &mut tmp);
+        }
+        if self.fields.len() > 0 {
+            self.fields.encode(&mut tmp);
+            subsec(10, &mut tmp);
         }
     }
 }

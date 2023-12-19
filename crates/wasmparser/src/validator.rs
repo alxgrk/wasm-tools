@@ -383,6 +383,8 @@ impl Default for WasmFeatures {
             relaxed_simd: true,
             threads: true,
             multi_memory: true,
+            // gc: true,
+            // exceptions: true,
         }
     }
 }
