@@ -3613,8 +3613,20 @@ where
         Ok(())
     }
     fn visit_array_new(&mut self, type_index: u32) -> Self::Output {
-        // TODO
-        Ok(())
+        let ty = self.array_type_at(type_index)?;
+        let val_ty = ty.0.element_type.unpack();
+
+        let mut heap_ty = HeapType::Concrete(UnpackedIndex::Module(type_index));
+        // Call `check_heap_type` to canonicalize the module index into an id.
+        self.resources.check_heap_type(&mut heap_ty, self.offset)?;
+
+        let ref_ty = RefType::new(false, heap_ty).ok_or_else(|| {
+            format_err!(self.offset, "implementation limit: type index too large")
+        })?;
+
+        self.pop_operand(Some(ValType::I32))?;
+        self.pop_operand(Some(val_ty))?;
+        self.push_operand(ref_ty)
     }
     fn visit_array_new_default(&mut self, type_index: u32) -> Self::Output {
         let ty = self.array_type_at(type_index)?;
@@ -3638,52 +3650,193 @@ where
         self.push_operand(ref_ty)
     }
     fn visit_array_new_fixed(&mut self, type_index: u32, size: u32) -> Self::Output {
-        // TODO
-        Ok(())
+        let ty = self.array_type_at(type_index)?;
+        let val_ty = ty.0.element_type.unpack();
+
+        let mut heap_ty = HeapType::Concrete(UnpackedIndex::Module(type_index));
+        // Call `check_heap_type` to canonicalize the module index into an id.
+        self.resources.check_heap_type(&mut heap_ty, self.offset)?;
+
+        let ref_ty = RefType::new(false, heap_ty).ok_or_else(|| {
+            format_err!(self.offset, "implementation limit: type index too large")
+        })?;
+
+        for _ in 0..size {
+            self.pop_operand(Some(val_ty))?;
+        }
+        self.push_operand(ref_ty)
     }
     fn visit_array_new_data(&mut self, type_index: u32, data_index: u32) -> Self::Output {
-        // TODO
-        Ok(())
+        let ty = self.array_type_at(type_index)?;
+        let val_ty = ty.0.element_type.unpack();
+
+        match val_ty {
+            ValType::Ref(ty) => bail!(
+                self.offset,
+                "invalid `array.new_data`: element type {ty} is neither a numeric nor a vector type"
+            ),
+            _ => {}
+        };
+
+        // TODO The data segment must exist.
+
+        let mut heap_ty = HeapType::Concrete(UnpackedIndex::Module(type_index));
+        // Call `check_heap_type` to canonicalize the module index into an id.
+        self.resources.check_heap_type(&mut heap_ty, self.offset)?;
+
+        let ref_ty = RefType::new(false, heap_ty).ok_or_else(|| {
+            format_err!(self.offset, "implementation limit: type index too large")
+        })?;
+
+        self.pop_operand(Some(ValType::I32))?;
+        self.pop_operand(Some(ValType::I32))?;
+        self.push_operand(ref_ty)
     }
     fn visit_array_new_elem(&mut self, type_index: u32, elem_index: u32) -> Self::Output {
-        // TODO
-        Ok(())
+        let ty = self.array_type_at(type_index)?;
+        let val_ty = ty.0.element_type.unpack();
+
+        let rt = match val_ty {
+            ValType::I32
+            | ValType::I64
+            | ValType::F32
+            | ValType::F64
+            | ValType::V128 => bail!(
+                self.offset,
+                "invalid `array.new_elem`: element type is not a reference type"
+            ),
+            ValType::Ref(rt) => rt
+        };
+
+        let elem_ty = self.resources.element_type_at(elem_index).ok_or_else(|| {
+            format_err!(self.offset, "invalid `array.new_elem`: element type at index {elem_index} does not exist")
+        })?;
+        if !self.resources.is_subtype(ValType::Ref(elem_ty), ValType::Ref(rt)) {
+            bail!(
+                self.offset,
+                "invalid `array.new_elem`: element type {elem_ty} does not match expected reference type {rt}"
+            );
+        }
+
+        let mut heap_ty = HeapType::Concrete(UnpackedIndex::Module(type_index));
+        // Call `check_heap_type` to canonicalize the module index into an id.
+        self.resources.check_heap_type(&mut heap_ty, self.offset)?;
+
+        let ref_ty = RefType::new(false, heap_ty).ok_or_else(|| {
+            format_err!(self.offset, "implementation limit: type index too large")
+        })?;
+
+        self.pop_operand(Some(ValType::I32))?;
+        self.pop_operand(Some(ValType::I32))?;
+        self.push_operand(ref_ty)
     }
     fn visit_array_get(&mut self, type_index: u32) -> Self::Output {
-        // TODO
-        Ok(())
+        let ty = self.array_type_at(type_index)?;
+        let val_ty = ty.0.element_type.unpack();
+
+        let mut heap_ty = HeapType::Concrete(UnpackedIndex::Module(type_index));
+        // Call `check_heap_type` to canonicalize the module index into an id.
+        self.resources.check_heap_type(&mut heap_ty, self.offset)?;
+
+        let ref_ty = RefType::new(true, heap_ty).ok_or_else(|| {
+            format_err!(self.offset, "implementation limit: type index too large")
+        })?;
+        self.pop_operand(Some(ValType::I32))?;
+        self.pop_operand(Some(ValType::from(ref_ty)))?;
+
+        self.push_operand(val_ty)
     }
     fn visit_array_get_s(&mut self, type_index: u32) -> Self::Output {
-        // TODO
-        Ok(())
+        let ty = self.array_type_at(type_index)?;
+        let val_ty = ty.0.element_type.unpack();
+
+        match ty.0.element_type {
+            StorageType::Val(ty) => bail!(
+                self.offset,
+                "invalid `array.get_s`: {ty} field is an unpacked type"
+            ),
+            _ => {}
+        };
+
+        let mut heap_ty = HeapType::Concrete(UnpackedIndex::Module(type_index));
+        // Call `check_heap_type` to canonicalize the module index into an id.
+        self.resources.check_heap_type(&mut heap_ty, self.offset)?;
+
+        let ref_ty = RefType::new(true, heap_ty).ok_or_else(|| {
+            format_err!(self.offset, "implementation limit: type index too large")
+        })?;
+        self.pop_operand(Some(ValType::I32))?;
+        self.pop_operand(Some(ValType::from(ref_ty)))?;
+
+        self.push_operand(val_ty)
     }
     fn visit_array_get_u(&mut self, type_index: u32) -> Self::Output {
-        // TODO
-        Ok(())
+        let ty = self.array_type_at(type_index)?;
+        let val_ty = ty.0.element_type.unpack();
+
+        match ty.0.element_type {
+            StorageType::Val(ty) => bail!(
+                self.offset,
+                "invalid `array.get_u`: {ty} field is an unpacked type"
+            ),
+            _ => {}
+        };
+
+        let mut heap_ty = HeapType::Concrete(UnpackedIndex::Module(type_index));
+        // Call `check_heap_type` to canonicalize the module index into an id.
+        self.resources.check_heap_type(&mut heap_ty, self.offset)?;
+
+        let ref_ty = RefType::new(true, heap_ty).ok_or_else(|| {
+            format_err!(self.offset, "implementation limit: type index too large")
+        })?;
+        self.pop_operand(Some(ValType::I32))?;
+        self.pop_operand(Some(ValType::from(ref_ty)))?;
+
+        self.push_operand(val_ty)
     }
     fn visit_array_set(&mut self, type_index: u32) -> Self::Output {
-        // TODO
+        let ty = self.array_type_at(type_index)?;
+        let val_ty = ty.0.element_type.unpack();
+        if !ty.0.mutable {
+            bail!(
+                self.offset,
+                "invalid `array.set`: {val_ty} array is immutable"
+            )
+        };
+
+        let mut heap_ty = HeapType::Concrete(UnpackedIndex::Module(type_index));
+        // Call `check_heap_type` to canonicalize the module index into an id.
+        self.resources.check_heap_type(&mut heap_ty, self.offset)?;
+
+        let ref_ty = RefType::new(true, heap_ty).ok_or_else(|| {
+            format_err!(self.offset, "implementation limit: type index too large")
+        })?;
+        self.pop_operand(Some(val_ty))?;
+        self.pop_operand(Some(ValType::I32))?;
+        self.pop_operand(Some(ValType::from(ref_ty)))?;
         Ok(())
     }
     fn visit_array_len(&mut self) -> Self::Output {
-        // TODO
-        Ok(())
+        let ref_ty = RefType::new(true, HeapType::Array).unwrap();
+        self.pop_operand(Some(ValType::from(ref_ty)))?;
+
+        self.push_operand(ValType::I32)
     }
     fn visit_array_fill(&mut self, type_index: u32) -> Self::Output {
         // TODO
         Ok(())
     }
     fn visit_array_copy(&mut self, src_type_index: u32, dst_type_index: u32) -> Self::Output {
-      // TODO
-      Ok(())
+        // TODO
+        Ok(())
     }
     fn visit_array_init_data(&mut self, type_index: u32, data_index: u32) -> Self::Output {
-      // TODO
-      Ok(())
+        // TODO
+        Ok(())
     }
     fn visit_array_init_elem(&mut self, type_index: u32, elem_index: u32) -> Self::Output {
-      // TODO
-      Ok(())
+        // TODO
+        Ok(())
     }
     fn visit_any_convert_extern(&mut self) -> Self::Output {
         let extern_ref = self.pop_operand(Some(RefType::EXTERNREF.into()))?;
@@ -3744,9 +3897,9 @@ enum Either<A, B> {
 }
 
 impl<A, B> Iterator for Either<A, B>
-where
-    A: Iterator,
-    B: Iterator<Item = A::Item>,
+    where
+        A: Iterator,
+        B: Iterator<Item = A::Item>,
 {
     type Item = A::Item;
     fn next(&mut self) -> Option<A::Item> {
@@ -3758,9 +3911,9 @@ where
 }
 
 impl<A, B> DoubleEndedIterator for Either<A, B>
-where
-    A: DoubleEndedIterator,
-    B: DoubleEndedIterator<Item = A::Item>,
+    where
+        A: DoubleEndedIterator,
+        B: DoubleEndedIterator<Item = A::Item>,
 {
     fn next_back(&mut self) -> Option<A::Item> {
         match self {
@@ -3771,9 +3924,9 @@ where
 }
 
 impl<A, B> ExactSizeIterator for Either<A, B>
-where
-    A: ExactSizeIterator,
-    B: ExactSizeIterator<Item = A::Item>,
+    where
+        A: ExactSizeIterator,
+        B: ExactSizeIterator<Item = A::Item>,
 {
     fn len(&self) -> usize {
         match self {

@@ -471,9 +471,9 @@ impl ModuleState {
                 $self.validate_gc("array.new_default")?;
                 $self.validator().visit_array_new_default($idx)
             }};
-            (@visit $self:ident visit_array_new_fixed $idx:ident) => {{
+            (@visit $self:ident visit_array_new_fixed $idx:ident $size:ident) => {{
                 $self.validate_gc("array.new_fixed")?;
-                $self.validator().visit_array_new_fixed($idx)
+                $self.validator().visit_array_new_fixed($idx, $size)
             }};
             (@visit $self:ident visit_ref_i31) => {{
                 $self.validate_gc("ref.i31")?;
