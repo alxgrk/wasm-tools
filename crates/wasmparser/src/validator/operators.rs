@@ -3481,11 +3481,17 @@ where
         Ok(())
     }
     fn visit_ref_eq(&mut self) -> Self::Output {
-        // TODO
-        self.pop_ref()?;
-        self.pop_ref()?;
-        self.push_operand(ValType::I32)?;
-        Ok(())
+        if let Some(rt) = self.pop_ref().unwrap() {
+            if !rt.is_eq_ref() {
+                bail!(self.offset, "type mismatch in `ref.eq`: first argument {rt} type is not eqref");
+            }
+        }
+        if let Some(rt) = self.pop_ref().unwrap() {
+            if !rt.is_eq_ref() {
+                bail!(self.offset, "type mismatch in `ref.eq`: second argument {rt} type is not eqref");
+            }
+        }
+        self.push_operand(ValType::I32)
     }
 
     fn visit_struct_new(&mut self, type_index: u32) -> Self::Output {

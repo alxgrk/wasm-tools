@@ -184,6 +184,7 @@ macro_rules! for_each_operator {
             @reference_types RefNull { hty: $crate::HeapType } => visit_ref_null
             @reference_types RefIsNull => visit_ref_is_null
             @reference_types RefFunc { function_index: u32 } => visit_ref_func
+            @reference_types RefEq => visit_ref_eq
             @mvp I32Eqz => visit_i32_eqz
             @mvp I32Eq => visit_i32_eq
             @mvp I32Ne => visit_i32_ne
@@ -316,7 +317,6 @@ macro_rules! for_each_operator {
             // 0xFB prefixed operators
             // Garbage Collection
             // http://github.com/WebAssembly/gc
-            @gc RefEq => visit_ref_eq
             @gc StructNew { type_index: u32 } => visit_struct_new
             @gc StructNewDefault { type_index: u32 } => visit_struct_new_default
             @gc StructGet { type_index: u32, field_index: u32 } => visit_struct_get

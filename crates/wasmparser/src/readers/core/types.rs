@@ -1038,6 +1038,12 @@ impl RefType {
         self.as_u32() & Self::ABSTYPE_MASK
     }
 
+    /// Is this the abstract eq reference type aka `(ref null
+    /// eq)` aka `eqref`?
+    pub const fn is_eq_ref(&self) -> bool {
+        !self.is_concrete_type_ref() && self.abstype() == Self::EQ_ABSTYPE
+    }
+
     /// Is this the abstract untyped function reference type aka `(ref
     /// null func)` aka `funcref` aka `anyfunc`?
     pub const fn is_func_ref(&self) -> bool {

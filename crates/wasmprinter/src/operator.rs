@@ -630,6 +630,7 @@ macro_rules! define_visit {
     (name RefNull) => ("ref.null");
     (name RefIsNull) => ("ref.is_null");
     (name RefFunc) => ("ref.func");
+    (name RefEq) => ("ref.eq");
     (name I32Const) => ("i32.const");
     (name I64Const) => ("i64.const");
     (name F32Const) => ("f32.const");
@@ -1099,7 +1100,6 @@ macro_rules! define_visit {
     (name I16x8RelaxedQ15mulrS) => ("i16x8.relaxed_q15mulr_s");
     (name I16x8RelaxedDotI8x16I7x16S) => ("i16x8.relaxed_dot_i8x16_i7x16_s");
     (name I32x4RelaxedDotI8x16I7x16AddS) => ("i32x4.relaxed_dot_i8x16_i7x16_add_s");
-    (name RefEq) => ("ref.eq");
     (name StructNew) => ("struct.new");
     (name StructNewDefault) => ("struct.new_default");
     (name StructGet) => ("struct.get");
